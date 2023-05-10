@@ -1,0 +1,42 @@
+#
+# Download ImageNet (took me 5 days!)
+#
+$ git clone https://github.com/tensorflow/models.git
+$ export IMAGENET_USERNAME=YOUR_USERNAME
+$ export IMAGENET_ACCESS_KEY=YOUR_ACCESS_KEY
+$ cd models/research/slim/datasets
+$ mv imagenet_2012_validation_synset_labels.txt synsets.txt
+$ nohup bash download_imagenet.sh . synsets.txt >& download.log &
+
+#
+# Install dependencies (Amazon Linux 2)
+#
+$ sudo yum -y install python-devel python-pip opencv opencv-devel opencv-python
+$ pip3 install mxnet opencv-python --user
+
+#
+# Build validation image tree
+#
+$ wget https://raw.githubusercontent.com/juliensimon/aws/master/mxnet/imagenet/build_validation_tree.sh
+$ chmod 755 build_validation_tree.sh
+$ cd imagenet/validation
+$ ../../build_validation_tree.sh
+$ cd ../..
+
+#
+# Build RecordIO files
+#
+$ wget https://raw.githubusercontent.com/apache/incubator-mxnet/master/tools/im2rec.py
+$ cd imagenet
+$ python3 ../im2rec.py --list --chunks 6 --recursive val validation
+$ python3 ../im2rec.py --num-thread 16 --resize 224 val_ validation
+$ python3 ../im2rec.py --list --chunks 140 --recursive train train
+$ python3 ../im2rec.py --num-thread 16 --resize 224 train_ train
+
+#
+# Sync files to S3
+#
+$ mkdir -p input/train input/validation
+$ mv train_*.rec input/train
+$ mv val_*.rec input/validation
+$ aws s3 sync input s3://sagemaker-us-east-1-123456789012/imagenet-split/input/
