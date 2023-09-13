@@ -14,3 +14,7 @@ https://hub.docker.com/_/docker/
 https://devopscube.com/run-docker-in-docker/
 
 https://shisho.dev/blog/posts/docker-in-docker/
+
+
+
+# https://github.com/aws-samples/sagemaker-studio-docker-cli-extension
